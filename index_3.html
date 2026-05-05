@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🥬 点单 · Order · Pesanan</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#16a34a;--green-light:#dcfce7;--green-dark:#14532d;
+  --wa:#25D366;--bg:#f0faf3;--card:#ffffff;
+  --border:#d1fae5;--border2:#e5e7eb;
+  --text:#111827;--muted:#6b7280;
+  --radius:14px;--radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);}
+body{max-width:480px;margin:0 auto;min-height:100vh;}
+
+.header{background:linear-gradient(135deg,#14532d 0%,#16a34a 100%);padding:18px 16px 14px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;}
+.shop-name{font-size:18px;font-weight:800;color:white;letter-spacing:-0.3px;}
+.shop-hours{font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;}
+.cart-btn{background:var(--wa);color:white;border:none;border-radius:var(--radius-sm);padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;box-shadow:0 2px 8px rgba(37,211,102,0.4);}
+.cart-badge{background:white;color:var(--wa);border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+.lang-bar{display:flex;gap:8px;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--border);}
+.lang-btn{flex:1;padding:8px 0;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.lang-btn.active{background:var(--green);color:white;border-color:var(--green);}
+
+.tab-bar{display:flex;overflow-x:auto;padding:0 16px;gap:4px;background:var(--card);border-bottom:1px solid var(--border);scrollbar-width:none;position:sticky;top:64px;z-index:40;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;transition:color 0.15s;}
+.tab.active{color:var(--green);border-bottom-color:var(--green);}
+
+.sections{padding:14px 16px 110px;}
+.section{margin-bottom:22px;}
+.section-title{font-size:11px;font-weight:800;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.product-card{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--radius);padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color 0.15s,box-shadow 0.15s;}
+.product-card.in-cart{border-color:var(--green);box-shadow:0 0 0 3px var(--green-light);}
+.product-info{flex:1;min-width:0;}
+.product-name{font-size:15px;font-weight:700;color:var(--text);}
+.product-zh{font-size:12px;color:var(--muted);margin-top:2px;}
+.product-price{font-size:12px;color:var(--green);font-weight:700;margin-top:3px;}
+
+.qty-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.qty-control{display:flex;align-items:center;gap:8px;}
+.qty-btn{width:32px;height:32px;border:1.5px solid var(--border2);border-radius:50%;background:var(--bg);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);line-height:1;font-family:inherit;transition:all 0.1s;}
+.qty-btn:active{background:var(--green-light);border-color:var(--green);transform:scale(0.9);}
+.qty-num{min-width:28px;text-align:center;font-size:16px;font-weight:800;color:var(--text);}
+.qty-unit{font-size:11px;color:var(--muted);text-align:center;font-weight:600;}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;backdrop-filter:blur(2px);}
+.overlay.open{display:block;}
+.cart-panel{display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--card);border-radius:22px 22px 0 0;border-top:1px solid var(--border);padding:0 16px 28px;max-height:80vh;overflow-y:auto;z-index:101;}
+.cart-panel.open{display:block;}
+.cart-drag{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:14px auto 16px;}
+.cart-header{font-size:18px;font-weight:800;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.close-btn{background:var(--bg);border:1px solid var(--border2);border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);}
+.cart-item-name{font-size:14px;font-weight:700;color:var(--text);}
+.cart-item-qty{font-size:13px;color:var(--muted);margin-top:2px;font-weight:600;}
+.cart-empty{text-align:center;color:var(--muted);padding:28px 0;font-size:15px;font-weight:600;}
+
+.form-section{margin-top:14px;}
+.form-label{font-size:13px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;}
+.form-input{width:100%;padding:11px 14px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;color:var(--text);background:var(--bg);outline:none;}
+.form-input:focus{border-color:var(--green);}
+.form-textarea{height:72px;resize:none;margin-top:8px;}
+
+.send-btn{width:100%;background:var(--wa);color:white;border:none;border-radius:var(--radius);padding:15px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;margin-top:14px;box-shadow:0 4px 14px rgba(37,211,102,0.35);transition:opacity 0.15s;}
+.send-btn:disabled{opacity:0.35;cursor:not-allowed;box-shadow:none;}
+.send-btn:active:not(:disabled){opacity:0.85;}
+.wa-svg{width:20px;height:20px;flex-shrink:0;}
+.no-products{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="shop-name" id="h-title">🥬 新鲜菜档</div>
+    <div class="shop-hours" id="h-sub">每天早上 5:00 营业</div>
+  </div>
+  <button class="cart-btn" onclick="openCart()">
+    <span id="h-cart">购物车</span>
+    <span class="cart-badge" id="cart-badge">0</span>
+  </button>
+</div>
+
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('zh',this)">中文</button>
+  <button class="lang-btn" onclick="setLang('ms',this)">BM</button>
+  <button class="lang-btn" onclick="setLang('vi',this)">Việt</button>
+</div>
+
+<div class="tab-bar" id="tab-bar"></div>
+<div class="sections" id="product-sections"></div>
+
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="cart-panel" id="cart-panel">
+  <div class="cart-drag"></div>
+  <div class="cart-header">
+    <span id="cart-title">我的订单</span>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div id="cart-items"></div>
+  <div class="form-section">
+    <label class="form-label" id="name-label">称呼</label>
+    <input class="form-input" id="customer-name" placeholder="例如：阿花姐" />
+  </div>
+  <div class="form-section">
+    <label class="form-label" id="notes-label">备注</label>
+    <textarea class="form-input form-textarea" id="order-notes" placeholder="备注..."></textarea>
+  </div>
+  <button class="send-btn" id="send-btn" onclick="sendWhatsApp()">
+    <svg class="wa-svg" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span id="send-label">发送到 WhatsApp</span>
+  </button>
+</div>
+
+<script>
+const i18n={
+  zh:{title:'🥬 新鲜菜档',sub:'每天早上 5:00 营业',cart:'购物车',cartTitle:'我的订单',namePh:'例如：阿花姐',nameLabel:'称呼',notesLabel:'备注',notesPh:'例如：不要太多泥',sendBtn:'发送到 WhatsApp',emptyCart:'还没有选商品哦 🛒',cats:{local_dry:'本地干菜',local_veg:'本地菜',thai:'泰国菜',cameron:'金马仑菜',china:'中国菜'}},
+  ms:{title:'🥬 Kedai Sayur Segar',sub:'Buka setiap pagi 5:00',cart:'Troli',cartTitle:'Pesanan Saya',namePh:'cth: Kak Maimun',nameLabel:'Nama',notesLabel:'Nota',notesPh:'cth: Kurang tanah',sendBtn:'Hantar ke WhatsApp',emptyCart:'Belum pilih barang lagi 🛒',cats:{local_dry:'Sayur Kering Tempatan',local_veg:'Sayur Tempatan',thai:'Sayur Thai',cameron:'Sayur Cameron',china:'Sayur China'}},
+  vi:{title:'🥬 Cửa Hàng Rau Tươi',sub:'Mở cửa 5:00 sáng mỗi ngày',cart:'Giỏ hàng',cartTitle:'Đơn hàng của tôi',namePh:'vd: Chị Lan',nameLabel:'Tên',notesLabel:'Ghi chú',notesPh:'vd: Ít bùn',sendBtn:'Gửi qua WhatsApp',emptyCart:'Chưa chọn hàng nào 🛒',cats:{local_dry:'Rau Khô Địa Phương',local_veg:'Rau Địa Phương',thai:'Rau Thái',cameron:'Rau Cameron',china:'Rau Trung Quốc'}}
+};
+
+const unitSteps={'kg':[0.5,1,2,3,5],'pkt':[1,2,3,5],'pcs':[1,2,3,5],'ns':[1,2,3],'ikat':[1,2,3]};
+
+const DEFAULT_PRODUCTS=[
+  {id:1,zh:'菜豆',ms:'Kacang Panjang',vi:'Đậu đũa',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:2,zh:'吊瓜',ms:'Timun',vi:'Dưa leo',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:3,zh:'红力',ms:'Cili Merah',vi:'Ớt đỏ',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:4,zh:'青力',ms:'Cili Hijau',vi:'Ớt xanh',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:5,zh:'桔子',ms:'Limau Kasturi',vi:'Tắc',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:6,zh:'大甘',ms:'Limau Nipis',vi:'Chanh',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:7,zh:'苦瓜',ms:'Peria',vi:'Khổ qua',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:8,zh:'苦瓜仔',ms:'Peria Katak',vi:'Khổ qua nhỏ',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:9,zh:'角豆',ms:'Bendi',vi:'Đậu bắp',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:10,zh:'元茄',ms:'Terung Bulat',vi:'Cà tím tròn',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:11,zh:'长茄',ms:'Terung Panjang',vi:'Cà tím dài',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:12,zh:'角瓜',ms:'Ketora',vi:'Bầu góc',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:13,zh:'金瓜',ms:'Labu Manis',vi:'Bí đỏ',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:14,zh:'白甫',ms:'Labu Putih',vi:'Bầu trắng',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:15,zh:'石瓜',ms:'Kubdur',vi:'Dưa núi',cat:'local_dry',unit:'ns',price:'',active:true},
+  {id:16,zh:'毛瓜',ms:'Terung Bulu',vi:'Mướp lông',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:17,zh:'蛇瓜',ms:'Timun Ular',vi:'Dưa rắn',cat:'local_dry',unit:'ns',price:'',active:true},
+  {id:18,zh:'老瓜',ms:'Terung Tua',vi:'Cà già',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:19,zh:'沙各',ms:'Sengkuang',vi:'Củ đậu',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:20,zh:'香茅',ms:'Serai',vi:'Sả',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:21,zh:'红番薯',ms:'Keledek Merah',vi:'Khoai lang đỏ',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:22,zh:'本地芋头',ms:'Keladi Tempatan',vi:'Khoai môn địa phương',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:23,zh:'豆芽',ms:'Taugeh',vi:'Giá đỗ',cat:'local_dry',unit:'kg',price:'',active:true},
+  {id:24,zh:'菜心',ms:'Sawi',vi:'Cải ngọt',cat:'local_veg',unit:'kg',price:'',active:true},
+  {id:25,zh:'苋菜',ms:'Bayam',vi:'Rau dền',cat:'local_veg',unit:'kg',price:'',active:true},
+  {id:26,zh:'蕹菜',ms:'Kangkung',vi:'Rau muống',cat:'local_veg',unit:'kg',price:'',active:true},
+  {id:27,zh:'菜心花',ms:'Sawi Bunga',vi:'Cải ngọt hoa',cat:'local_veg',unit:'kg',price:'',active:true},
+  {id:28,zh:'树子菜',ms:'Pucuk Manis',vi:'Rau ngọt',cat:'local_veg',unit:'kg',price:'',active:true},
+  {id:29,zh:'青米粒椒',ms:'Cili Padi Hijau',vi:'Ớt hiểm xanh',cat:'thai',unit:'kg',price:'',active:true},
+  {id:30,zh:'青辣椒',ms:'Cili Hijau Thai',vi:'Ớt xanh Thái',cat:'thai',unit:'kg',price:'',active:true},
+  {id:31,zh:'红辣椒',ms:'Cili Merah Thai',vi:'Ớt đỏ Thái',cat:'thai',unit:'kg',price:'',active:true},
+  {id:32,zh:'菜胆',ms:'Baby Kailan',vi:'Cải non',cat:'thai',unit:'pkt',price:'',active:true},
+  {id:33,zh:'盘装玉米心',ms:'Baby Jagung',vi:'Ngô non',cat:'thai',unit:'pkt',price:'',active:true},
+  {id:34,zh:'泰国芋头',ms:'Yam Thai',vi:'Khoai môn Thái',cat:'thai',unit:'kg',price:'',active:true},
+  {id:35,zh:'泰国生菜',ms:'Salad Thai',vi:'Xà lách Thái',cat:'thai',unit:'ns',price:'',active:true},
+  {id:36,zh:'泰国臭豆',ms:'Petai Thai',vi:'Đậu hôi Thái',cat:'thai',unit:'pkt',price:'',active:true},
+  {id:37,zh:'元绥',ms:'Daun Ketumbar',vi:'Rau mùi',cat:'thai',unit:'kg',price:'',active:true},
+  {id:38,zh:'九白',ms:'Sawi Putih',vi:'Cải trắng',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:39,zh:'皱菜',ms:'Huangjin Baicai',vi:'Cải vàng',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:40,zh:'玻璃生菜',ms:'Lettuce Iceberg',vi:'Xà lách băng',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:41,zh:'香胆',ms:'Baby Lettuce',vi:'Xà lách non',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:42,zh:'日本黄瓜',ms:'Timun Jepun',vi:'Dưa leo Nhật',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:43,zh:'小白菜',ms:'Sawi Jepun',vi:'Cải thìa',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:44,zh:'大芥菜',ms:'Mustard Leaf',vi:'Cải bẹ xanh',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:45,zh:'金马仑包菜',ms:'Kobis Cameron',vi:'Bắp cải Cameron',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:46,zh:'金马仑菜心',ms:'Sawi Cameron',vi:'Cải ngọt Cameron',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:47,zh:'珍珠玉米',ms:'Sweet Corn',vi:'Bắp ngọt',cat:'cameron',unit:'pcs',price:'',active:true},
+  {id:48,zh:'奶油玉米',ms:'Susu Corn',vi:'Bắp sữa',cat:'cameron',unit:'ns',price:'',active:true},
+  {id:49,zh:'毛豆',ms:'French Bean',vi:'Đậu que',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:50,zh:'番茄',ms:'Tomato',vi:'Cà chua',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:51,zh:'芹菜',ms:'Daun Sup',vi:'Rau cần',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:52,zh:'葱',ms:'Daun Bawang',vi:'Hành lá',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:53,zh:'有头生菜',ms:'Lettuce Garden',vi:'Xà lách cuộn',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:54,zh:'芥兰',ms:'Kailan',vi:'Cải làn',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:55,zh:'青龙菜',ms:'Qinglong Cai',vi:'Cải thanh long',cat:'cameron',unit:'pkt',price:'',active:true},
+  {id:56,zh:'红灯笼椒',ms:'Capsicum Merah',vi:'Ớt chuông đỏ',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:57,zh:'黄灯笼椒',ms:'Capsicum Kuning',vi:'Ớt chuông vàng',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:58,zh:'青灯笼椒',ms:'Capsicum Hijau',vi:'Ớt chuông xanh',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:59,zh:'韭菜',ms:'Kucai',vi:'Hẹ',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:60,zh:'金马仑白萝卜',ms:'Lobak Putih Cameron',vi:'Củ cải trắng Cameron',cat:'cameron',unit:'kg',price:'',active:true},
+  {id:61,zh:'港菜心',ms:'HK Sawi',vi:'Cải ngọt HK',cat:'china',unit:'kg',price:'',active:true},
+  {id:62,zh:'清白仔',ms:'Pak Choy',vi:'Cải thìa trắng',cat:'china',unit:'kg',price:'',active:true},
+  {id:63,zh:'上海青',ms:'Shanghai Pak Choy',vi:'Cải thìa Thượng Hải',cat:'china',unit:'ns',price:'',active:true},
+  {id:64,zh:'中国菠菜',ms:'Spinach China',vi:'Rau bina TQ',cat:'china',unit:'kg',price:'',active:true},
+  {id:65,zh:'青蒜',ms:'Leek',vi:'Tỏi tây xanh',cat:'china',unit:'kg',price:'',active:true},
+  {id:66,zh:'红蒜',ms:'Leek Merah',vi:'Tỏi tây đỏ',cat:'china',unit:'kg',price:'',active:true},
+  {id:67,zh:'北京包菜',ms:'Kobis Beijing',vi:'Bắp cải Bắc Kinh',cat:'china',unit:'kg',price:'',active:true},
+  {id:68,zh:'长白',ms:'Kobis Panjang',vi:'Cải dài',cat:'china',unit:'kg',price:'',active:true},
+  {id:69,zh:'元霄白',ms:'Yuanxiao Bai',vi:'Cải nguyên tiêu',cat:'china',unit:'kg',price:'',active:true},
+  {id:70,zh:'竹白',ms:'Long Cabbage',vi:'Cải tre',cat:'china',unit:'ns',price:'',active:true},
+  {id:71,zh:'中国萝卜',ms:'Lobak China',vi:'Củ cải TQ',cat:'china',unit:'kg',price:'',active:true},
+  {id:72,zh:'中国白萝卜',ms:'White Radish',vi:'Củ cải trắng TQ',cat:'china',unit:'kg',price:'',active:true},
+  {id:73,zh:'西兰花',ms:'Broccoli',vi:'Bông cải xanh',cat:'china',unit:'kg',price:'',active:true},
+  {id:74,zh:'包菜花',ms:'Kobis Bunga',vi:'Súp lơ trắng',cat:'china',unit:'kg',price:'',active:true},
+  {id:75,zh:'散花',ms:'Kobis Bunga Loose',vi:'Súp lơ rời',cat:'china',unit:'kg',price:'',active:true},
+  {id:76,zh:'蒜米',ms:'Bawang Putih',vi:'Tỏi',cat:'china',unit:'kg',price:'',active:true},
+  {id:77,zh:'红皮洋葱',ms:'Bawang Besar',vi:'Hành tây đỏ',cat:'china',unit:'kg',price:'',active:true},
+  {id:78,zh:'荷兰洋葱',ms:'Bawang Holland',vi:'Hành tây Hà Lan',cat:'china',unit:'kg',price:'',active:true},
+  {id:79,zh:'蒜肉',ms:'Bawang Putih Kopeh',vi:'Tỏi bóc vỏ',cat:'china',unit:'pkt',price:'',active:true},
+  {id:80,zh:'土豆',ms:'Kentang',vi:'Khoai tây',cat:'china',unit:'kg',price:'',active:true},
+  {id:81,zh:'金针菇',ms:'Cendawan Enoki',vi:'Nấm kim châm',cat:'china',unit:'pkt',price:'',active:true},
+  {id:82,zh:'白玉菇',ms:'Cendawan Putih',vi:'Nấm trắng',cat:'china',unit:'pkt',price:'',active:true},
+  {id:83,zh:'灵芝菇',ms:'Cendawan Lingzhi',vi:'Nấm linh chi',cat:'china',unit:'pkt',price:'',active:true},
+  {id:84,zh:'杏鲍菇',ms:'Cendawan Tiram Diraja',vi:'Nấm bào ngư hoàng đế',cat:'china',unit:'pkt',price:'',active:true},
+  {id:85,zh:'香菇',ms:'Cendawan Shiitake',vi:'Nấm hương',cat:'china',unit:'pkt',price:'',active:true},
+  {id:86,zh:'冬瓜',ms:'Tembikai Susu',vi:'Bí đông',cat:'china',unit:'kg',price:'',active:true},
+  {id:87,zh:'莲藕',ms:'Ubi Teratai',vi:'Ngó sen',cat:'china',unit:'kg',price:'',active:true},
+  {id:88,zh:'山药',ms:'Ubi Kayu Jepun',vi:'Khoai mài',cat:'china',unit:'kg',price:'',active:true},
+  {id:89,zh:'粉葛',ms:'Ubi Kemili',vi:'Sắn dây',cat:'china',unit:'kg',price:'',active:true},
+  {id:90,zh:'甜豆',ms:'Snap Pea',vi:'Đậu Hà Lan ngọt',cat:'china',unit:'pkt',price:'',active:true},
+  {id:91,zh:'荷兰豆',ms:'Kacang Belanda',vi:'Đậu Hà Lan dẹt',cat:'china',unit:'pkt',price:'',active:true},
+  {id:92,zh:'蒜花',ms:'Bunga Bawang',vi:'Hoa tỏi',cat:'china',unit:'ikat',price:'',active:true},
+  {id:93,zh:'西芹',ms:'Saderi China',vi:'Cần tây TQ',cat:'china',unit:'kg',price:'',active:true},
+];
+
+let lang='zh',cart={},products=[],nextId=100;
+
+function loadData(){
+  try{
+    const s=localStorage.getItem('kedai_products');
+    if(s){products=JSON.parse(s);nextId=Math.max(...products.map(p=>p.id),99)+1;}
+    else{products=[...DEFAULT_PRODUCTS];localStorage.setItem('kedai_products',JSON.stringify(products));}
+  }catch(e){products=[...DEFAULT_PRODUCTS];}
+}
+
+function pName(p){return p[lang]||p.zh;}
+
+function setLang(l,btn){
+  lang=l;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyLang();renderTabs();renderProducts();
+}
+
+function applyLang(){
+  const t=i18n[lang];
+  document.getElementById('h-title').textContent=t.title;
+  document.getElementById('h-sub').textContent=t.sub;
+  document.getElementById('h-cart').textContent=t.cart;
+  document.getElementById('cart-title').textContent=t.cartTitle;
+  document.getElementById('customer-name').placeholder=t.namePh;
+  document.getElementById('name-label').textContent=t.nameLabel;
+  document.getElementById('notes-label').textContent=t.notesLabel;
+  document.getElementById('order-notes').placeholder=t.notesPh;
+  document.getElementById('send-label').textContent=t.sendBtn;
+}
+
+function renderTabs(){
+  const t=i18n[lang];
+  const cats=[...new Set(products.filter(p=>p.active).map(p=>p.cat))];
+  const bar=document.getElementById('tab-bar');bar.innerHTML='';
+  cats.forEach((cat,i)=>{
+    const el=document.createElement('button');
+    el.className='tab'+(i===0?' active':'');
+    el.textContent=t.cats[cat]||cat;
+    el.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');document.getElementById('sec-'+cat)?.scrollIntoView({behavior:'smooth',block:'start'});};
+    bar.appendChild(el);
+  });
+}
+
+function renderProducts(){
+  const t=i18n[lang];
+  const active=products.filter(p=>p.active);
+  const cats=[...new Set(active.map(p=>p.cat))];
+  const container=document.getElementById('product-sections');container.innerHTML='';
+  if(!active.length){container.innerHTML='<div class="no-products">暂无商品</div>';return;}
+  cats.forEach(cat=>{
+    const sec=document.createElement('div');sec.className='section';sec.id='sec-'+cat;
+    sec.innerHTML='<div class="section-title">'+(t.cats[cat]||cat)+'</div>';
+    active.filter(p=>p.cat===cat).forEach(p=>{
+      const qty=cart[p.id]?.qty||0;
+      const step=(unitSteps[p.unit]||[1])[0];
+      const card=document.createElement('div');
+      card.className='product-card'+(qty>0?' in-cart':'');card.id='card-'+p.id;
+      const displayName=pName(p);
+      const showZH=lang!=='zh'&&p.zh!==displayName;
+      card.innerHTML=`
+        <div class="product-info">
+          <div class="product-name">${displayName}</div>
+          ${showZH?`<div class="product-zh">${p.zh}</div>`:''}
+          ${p.price?`<div class="product-price">RM ${parseFloat(p.price).toFixed(2)}</div>`:''}
+        </div>
+        <div class="qty-wrap">
+          <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty(${p.id},-${step})">−</button>
+            <div><div class="qty-num" id="qty-${p.id}">${qty}</div><div class="qty-unit">${p.unit}</div></div>
+            <button class="qty-btn" onclick="changeQty(${p.id},${step})">+</button>
+          </div>
+        </div>`;
+      sec.appendChild(card);
+    });
+    container.appendChild(sec);
+  });
+}
+
+function changeQty(id,delta){
+  const p=products.find(x=>x.id===id);if(!p)return;
+  if(!cart[id])cart[id]={p,qty:0};
+  cart[id].qty=Math.max(0,cart[id].qty+delta);
+  if(cart[id].qty===0)delete cart[id];
+  const el=document.getElementById('qty-'+id);if(el)el.textContent=cart[id]?.qty||0;
+  const card=document.getElementById('card-'+id);
+  if(card){if(cart[id]?.qty>0)card.classList.add('in-cart');else card.classList.remove('in-cart');}
+  updateBadge();
+}
+
+function updateBadge(){document.getElementById('cart-badge').textContent=Object.keys(cart).length;}
+function openCart(){renderCart();document.getElementById('cart-panel').classList.add('open');document.getElementById('overlay').classList.add('open');}
+function closeCart(){document.getElementById('cart-panel').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
+
+function renderCart(){
+  const t=i18n[lang];
+  const container=document.getElementById('cart-items');
+  const items=Object.values(cart);
+  if(!items.length){container.innerHTML='<div class="cart-empty">'+t.emptyCart+'</div>';document.getElementById('send-btn').disabled=true;return;}
+  document.getElementById('send-btn').disabled=false;
+  // 购物车显示当前语言
+  container.innerHTML=items.map(i=>`<div class="cart-item"><div><div class="cart-item-name">${pName(i.p)}</div><div class="cart-item-qty">${i.qty} ${i.p.unit}</div></div></div>`).join('');
+}
+
+function sendWhatsApp(){
+  const waNum=localStorage.getItem('kedai_wa')||'60123456789';
+  const name=document.getElementById('customer-name').value.trim()||(lang==='zh'?'顾客':lang==='ms'?'Pelanggan':'Khách hàng');
+  const notes=document.getElementById('order-notes').value.trim();
+  const items=Object.values(cart);if(!items.length)return;
+  const now=new Date();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+
+  // ✅ 订单永远用中文发给档主，不管客户用什么语言
+  let msg=`📦 *新订单*\n👤 ${name}\n🕐 ${time}\n━━━━━━━━━━━━━━\n`;
+  items.forEach(i=>{msg+=`• ${i.p.zh}：${i.qty} ${i.p.unit}\n`;});
+  msg+=`━━━━━━━━━━━━━━`;
+  if(notes)msg+=`\n📝 ${notes}`;
+  msg+=`\n请确认 🙏`;
+  window.open('https://wa.me/'+waNum+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+loadData();applyLang();renderTabs();renderProducts();
+</script>
+</body>
+</html>
